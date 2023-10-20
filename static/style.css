@@ -1,0 +1,145 @@
+:root {
+    --bg: #111e1f;
+    --bg1: #162627;
+    --bg2: #253a3a;
+    --fg: #fbf4c4;
+    --fg2: #aad0a3;
+    --fg3: #95b88f;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: monospace;
+    box-sizing: content-box;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+button {
+    border: none;
+    background: none;
+    padding: 10px;
+    margin-right: 10px;
+}
+
+button:hover {
+    background: var(--bg2);
+}
+
+input {
+    background-color: var(--bg2);
+    border: none;
+    color: var(--fg);
+    font-size: 16px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: 10px;
+    padding-left: 20px;
+    font-family: monospace;
+}
+
+a:visited {
+    text-decoration: none;
+    color: var(--fg);
+}
+
+a {
+    text-decoration: none;
+}
+
+aside a {
+    color: var(--fg);
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    display: block;
+    transition: 300ms;
+    font-size: 12px;
+}
+
+aside a:hover {
+    background-color: var(--bg1);
+    transition: 300ms;
+}
+
+aside {
+    min-width: 160px;
+    width: max-content;
+    background-color: var(--bg2);
+    height: 100%;
+    overflow-y: scroll;
+}
+
+main {
+    display: flex;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.logo {
+    margin-bottom: 20px;
+}
+
+.contents {
+    width: 100%;
+    padding-left: 10px;
+    padding-top: 10px;
+    overflow-y: scroll;
+}
+
+.head {
+    padding-left: 10px;
+    background-color: var(--bg1);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+}
+
+.icon {
+    image-rendering: pixelated;
+    vertical-align: middle;
+}
+
+.message {
+    line-height: 1.6;
+}
+
+.message a {
+    color: var(--fg2);
+}
+
+.message a:visited {
+    color: var(--fg2);
+}
+
+.loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg2);
+    padding: 10px;
+}
+
+.loading h1 {
+    margin: 0;
+    padding: 0;
+}
+
+#input-date-button {
+    position: relative;
+}
+
+.date-input-box {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: -30px;
+    opacity: 0;
+}
