@@ -11,10 +11,19 @@
 
 <body>
     <div class="head">
-        <img src="images/logo-totoro.svg" height="32">
-        <button id="input-date-button">
+        <div class="logo">
+            <img src="images/logo-totoro.svg" onclick="window.location.href = '/'" height="32">
+        </div>
+        <button id="input-date-button" class="jump-to-date">
             <img class="icon" src="images/calendar.png" width="16" height="16">
             <input id="input-date" class="date-input-box" type="date" />
+        </button>
+        <button id="log-prev" class="jump-to-date">
+            <img class="icon" src="images/arrow-left.png" width="16" height="16">
+        </button>
+        <p id="current-date" class="jump-to-date">loading</p>
+        <button id="log-next" class="jump-to-date">
+            <img class="icon" src="images/arrow-right.png" width="16" height="16">
         </button>
         <input id="input-search" type="search" placeholder="Search...">
         <button id="search">

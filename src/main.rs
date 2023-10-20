@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env, error::Error, path::Path};
+use std::{collections::HashMap, env, error::Error, path::Path, sync::Arc};
 
 pub mod error;
 pub mod models;
@@ -8,8 +8,10 @@ mod query;
 use chrono::{NaiveDate, Utc};
 use config::Config;
 use error::{handle_rejection, ErrorResponse};
+use futures::executor;
 use query::{search, Expr};
 use sqlx::{postgres::PgListener, Pool, Postgres};
+use tokio::sync::Mutex;
 use warp::{
     reject::Rejection,
     reply::{self, WithHeader, WithStatus},
@@ -61,19 +63,30 @@ fn fmt_database_output(input: Vec<Message>, format: QueryOutput) -> WithStatus<W
     }
 }
 
-async fn get_log_dates(pool: Pool<Postgres>) -> Result<impl warp::Reply, Rejection> {
-    let result = sqlx::query!(
-        "SELECT DISTINCT DATE(date_trunc('day', msg_timestamp)) AS dates FROM messages ORDER BY dates DESC"
-    )
-    .fetch_all(&pool)
-    .await
-    .map_err(|_| warp::reject::custom(error::DatabaseError))?;
+async fn get_log_dates(pool: Pool<Postgres>, dates: Arc<Mutex<Vec<NaiveDate>>>) -> Result<impl warp::Reply, Rejection> {
+    let mut lock = dates.lock().await;
 
-    let res: Vec<NaiveDate> = result
-        .iter()
-        .filter(|a| a.dates.is_some())
-        .map(|f| f.dates.unwrap())
-        .collect();
+    let res = if lock.len() == 0 {
+        let result = sqlx::query!(
+            "SELECT DISTINCT DATE(date_trunc('day', msg_timestamp)) AS dates FROM messages ORDER BY dates DESC"
+        )
+        .fetch_all(&pool)
+        .await
+        .map_err(|_| warp::reject::custom(error::DatabaseError))?;
+    
+        let res: Vec<NaiveDate> = result
+            .iter()
+            .filter(|a| a.dates.is_some())
+            .map(|f| f.dates.unwrap())
+            .collect();
+
+        for date in res.iter() {
+            lock.push(date.clone())
+        }
+        res
+    } else {
+        lock.to_vec()
+    };
 
     Ok(reply::with_status(
         reply::with_header(
@@ -162,9 +175,28 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let pool = sqlx::PgPool::connect(&config.postgres_url).await?;
     let mut listener = PgListener::connect(&config.postgres_url).await?;
+
     listener.listen("chan0").await?;
 
+
+    let dates = Arc::new(Mutex::new(Vec::new()));
+
+    let timer = timer::Timer::new();
+    let dates_timer = dates.clone();
+
+    let _guard = {
+        timer.schedule_repeating(chrono::Duration::minutes(5), move || {
+            // invalidate cache
+            futures::executor::block_on(async {
+                let mut data = dates_timer.lock().await;
+                data.clear();
+            });
+        })
+    };
+
+
     let db_filter = warp::any().map(move || pool.clone());
+    let dates_filter = warp::any().map(move || dates.clone());
     let static_files = env::current_dir()?.join(Path::new("static"));
 
     if static_files.exists() {
@@ -185,6 +217,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         let logs_total_dates = warp::path!("dates")
             .and(db_filter.clone())
+            .and(dates_filter)
             .and_then(get_log_dates);
 
         warp::serve(
