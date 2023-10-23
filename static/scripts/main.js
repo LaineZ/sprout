@@ -49,12 +49,57 @@ function showErrorModal(message) {
     a.play();
 }
 
+function renderIRCFormatting(text) {
+    text = text.replace(/\x03(\d{1,2}(,\d{1,2})?)?/g, function(match, color) {
+        if (color) {
+            return `<span style="color: ${getHTMLColorFromIRC(color)};">`;
+        } else {
+            return '</span>';
+        }
+    });
+
+    text = text.replace(/\x0F/g, '</span>');
+    text = text.replace(/\x02(.*?)\x02/g, '<strong>$1</strong>');
+    text = text.replace(/\x1D(.*?)\x1D/g, '<em>$1</em>');
+
+    return text;
+}
+
+function autolinkText(text) {
+    const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%=~_|$?!:,.]*[A-Z0-9+&@#/%=~_|$])/gi;
+    return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
+function getHTMLColorFromIRC(ircColor) {
+    const ircColors = [
+        'var(--fg)', '#000000', '#00007F', '#009300', '#ff0000', 'var(--error-bg)', '#9C009C', '#FC7F00', '#FFFF00',
+        '#00FC00', '#009393', '#00FFFF', '#0000FC', '#FF00FF', '#7F7F7F', '#D2D2D2'
+    ];
+
+    const colorCodes = ircColor.split(',').map(Number);
+    let htmlColor = "var(--fg)";
+
+    if (colorCodes.length === 1) {
+        htmlColor = `${ircColors[colorCodes[0]]}`;
+    } else if (colorCodes.length === 2) {
+        htmlColor = `${ircColors[colorCodes[1]]}`;
+    }
+
+    return htmlColor;
+}
+
 function colorize() {
     const nicks = document.querySelectorAll(".from");
     nicks.forEach(element => {
         const hashCode = hashCodeFromString(element.textContent);
         const color = getColorIndex(hashCode);
         element.style.color = colorPalette[color];
+    });
+
+    const messages = document.querySelectorAll(".text");
+    messages.forEach(element => {
+        element.innerHTML = autolinkText(element.textContent);
+        element.innerHTML = renderIRCFormatting(element.innerHTML);
     });
 }
 
