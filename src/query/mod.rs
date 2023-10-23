@@ -320,7 +320,7 @@ pub async fn search(
     let order = expr.get_func("order").unwrap_or_else(|| "desc").to_owned();
 
     query.sql(
-        "SELECT msg_offset, msg_author, msg_body, msg_timestamp \
+        "SELECT msg_id, msg_offset, msg_author, msg_body, msg_timestamp \
          FROM messages \
          LEFT JOIN aliases ON alias_secondary = msg_author \
          WHERE ",
@@ -357,10 +357,11 @@ pub async fn search(
     let mut rows = db.fetch(ExecWrapper(&query, bindings));
     while let Some(Ok(row)) = rows.next().await {
         messages.push(models::Message {
-            author: row.get(1),
-            body: row.get(2),
-            time: row.get(3),
-            offset: row.get(0)
+            id: row.get(0),
+            author: row.get(2),
+            body: row.get(3),
+            time: row.get(4),
+            offset: row.get(1)
         })
     }
 

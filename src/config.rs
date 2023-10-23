@@ -25,7 +25,7 @@ impl Config {
             Ok(string) => {
                 return toml::from_str(&string).unwrap_or_default();
             }
-            Err(err) => {
+            Err(_) => {
                 return Config::default();
             }
         }

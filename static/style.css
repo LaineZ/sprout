@@ -1,3 +1,8 @@
+@font-face {
+  font-family: "unscii-thin";
+  src: url("/fonts/unscii-8-thin.otf");
+}
+
 :root {
   --bg: #111e1f;
   --bg1: #162627;
@@ -30,11 +35,31 @@ body {
   height: 100vh;
 }
 
-button {
+button, input[type=submit] {
   border: none;
   background: none;
   padding: 10px;
   margin-right: 10px;
+}
+
+form {
+  display: flex;
+  width: 100%;
+}
+
+input[type=submit] {
+  width: 32px;
+  background-image: url("/images/search.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+}
+
+input[type=submit]:hover {
+  background: var(--bg2);
+  background-image: url("/images/search.png");
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 button:hover {
@@ -98,12 +123,20 @@ main {
 }
 
 .logo {
-  margin-right: 20px;
+  image-rendering: pixelated;
+  vertical-align: middle;
+  height: 32px;
+}
+
+.logo-btn {
+  padding: 0px;
 }
 
 .contents {
   width: 100%;
   padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 5px;
   padding-top: 10px;
   overflow-y: scroll;
 }
@@ -123,6 +156,8 @@ main {
 
 .message {
   line-height: 1.6;
+  width: 100%;
+  line-break: anywhere;
 }
 
 .message a {
@@ -176,6 +211,13 @@ main {
   transition: opacity 500ms;
 }
 
-.jump-to-date {
+#search input[type=submit] {}
+
+.hidden {
   display: none;
+}
+
+.error {
+  width: 100%;
+  padding: 20px;
 }

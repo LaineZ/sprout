@@ -20,7 +20,7 @@ impl reject::Reject for DatabaseError {}
 impl reject::Reject for ErrorResponse {}
 
 
-pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
+pub async fn handle_rejection_json(err: Rejection) -> Result<impl Reply, Infallible> {
     let code;
     let message;
 

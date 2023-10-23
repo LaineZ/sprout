@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Sprout: Indexed #CC.RU Logs</title>
+</head>
+
+<body>
+    <div class="head">
+        <button class="logo-btn" onclick="window.location.href = '/'">
+            <img class="logo" src="images/icon.png" height="16">
+        </button>
+        <form method="get" action="/search" id="search">
+            <input id="input-search" type="search" placeholder="Search..." name="q">
+            <input type="submit" value="">
+        </form>
+    </div>
+    <main>
+        <!-- <aside>
+            <div class="logo">
+                <img alt="Logo" src="images/logo.svg" width="128" height="128">
+            </div>
+            <div class="log-files">
+            </div>
+        </aside> -->
+        {{#if error}}
+        <div class="error">
+            <h2>{{ error }}</h2>
+        </div>
+        {{/if}}
+        <div class="contents">
+            {{#each messages}}
+            <h2>{{ this.date }}</h2>
+                {{#each this.messages}}
+                    <div class="message">
+                        <a id="{{ this.id }}" class="time" href="{{ this.id }}">[{{ this.time }}]</a>
+                        <span class="from">&lt;{{ this.author }}&gt;</span>
+                        <span class="text">{{ this.body }}</span>
+                    </div>
+                {{/each}}
+            {{/each}}
+        </div>
+    </main>
+    <script src="scripts/main.js"></script>
+</body>
+
+</html>

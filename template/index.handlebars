@@ -4,31 +4,31 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Sprout: Indexed #CC.RU Logs</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Sprout: Indexed #CC.RU Logs</title>
 </head>
 
 <body>
     <div class="head">
-        <div class="logo">
-            <img src="images/logo-totoro.svg" onclick="window.location.href = '/'" height="32">
-        </div>
-        <button id="input-date-button" class="jump-to-date">
+        <button class="logo-btn" onclick="window.location.href = '/'">
+            <img class="logo" src="images/icon.png" height="16">
+        </button>
+        <button id="input-date-button" class="hidden log-date-control">
             <img class="icon" src="images/calendar.png" width="16" height="16">
             <input id="input-date" class="date-input-box" type="date" />
         </button>
-        <button id="log-prev" class="jump-to-date">
+        <button id="log-prev" class="hidden log-date-control">
             <img class="icon" src="images/arrow-left.png" width="16" height="16">
         </button>
-        <p id="current-date" class="jump-to-date">loading</p>
-        <button id="log-next" class="jump-to-date">
+        <p id="current-date" class="hidden log-date-control">loading</p>
+        <button id="log-next" class="hidden log-date-control">
             <img class="icon" src="images/arrow-right.png" width="16" height="16">
         </button>
-        <input id="input-search" type="search" placeholder="Search...">
-        <button id="search">
-            <img class="icon" src="images/search.png" width="16" height="16">
-        </button>
+        <form method="get" action="/search" id="search">
+            <input id="input-search" type="search" placeholder="Search..." name="q">
+            <input type="submit" value="">
+        </form>
     </div>
     <main>
         <!-- <aside>
@@ -39,6 +39,13 @@
             </div>
         </aside> -->
         <div class="contents">
+            {{#each messages}}
+            <div class="message">
+                <a id="{{ this.id }}" class="time" href="#{{ this.id }}">[{{ this.time }}]</a>
+                <span class="from">&lt;{{ this.author }}&gt;</span>
+                <span class="text">{{ this.body }}</span>
+            </div>
+            {{/each}}
         </div>
     </main>
     <script src="scripts/main.js"></script>
