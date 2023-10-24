@@ -181,14 +181,6 @@ main {
   padding: 10px;
 }
 
-#input-date-button {
-  position: relative;
-}
-
-#current-date {
-  margin-right: 10px;
-}
-
 .date-input-box {
   position: absolute;
   width: 100%;
@@ -215,13 +207,41 @@ main {
   transition: opacity 500ms;
 }
 
-#search input[type=submit] {}
-
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .error {
   width: 100%;
   padding: 20px;
+}
+
+.log-date-control {
+  display: flex;
+}
+
+#collapse {
+  display: none;
+  transform: rotate(180deg);
+  transition: transform 200ms;
+}
+
+#collapse.collapsed {
+  transform: rotate(0deg);
+  transition: transform 200ms;
+}
+
+#input-date-button {
+  position: relative;
+}
+
+#current-date {
+  margin-right: 10px;
+}
+
+
+@media (max-width: 800px) {
+  #collapse {
+    display: unset;
+  }
 }

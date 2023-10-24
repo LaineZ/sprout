@@ -125,6 +125,8 @@ async function getLogsDates() {
     document.querySelectorAll(".log-date-control").forEach((element) => {
         element.classList.remove("hidden");
     });
+
+    document.querySelector("#collapse").classList.remove("hidden");
 }
 
 function searchView(path) {
@@ -133,10 +135,25 @@ function searchView(path) {
     searchInput.value = query.get("q");
 }
 
+function resize() {
+    if (window.innerWidth <= 800) {
+        document.querySelectorAll(".log-date-control").forEach((element) => {
+            element.classList.add("hidden");
+            document.querySelector("#search").classList.add("hidden");
+        });
+    } else {
+        document.querySelectorAll(".log-date-control").forEach((element) => {
+            element.classList.remove("hidden");
+        });
+        document.querySelector("#search").classList.remove("hidden");
+    }
+}
+
 async function defaultView(path) {
     const logNextButton = document.querySelector("#log-next");
     const logPreviousButton = document.querySelector("#log-prev");
     const dateInput = document.querySelector("#input-date");
+    const collapseButton = document.querySelector("#collapse");
 
     logNextButton.addEventListener("click", async (event) => {
         if (uiState.currentDateIndex <= 0) {
@@ -147,6 +164,26 @@ async function defaultView(path) {
             window.location.href = logDates[uiState.currentDateIndex];
         }
     });
+
+    collapseButton.addEventListener("click", () => {
+        document.querySelectorAll(".log-date-control").forEach((element) => {
+            collapseButton.classList.toggle("collapsed");
+
+            if (collapseButton.classList.contains("collapsed")) {
+                document.querySelector("#search").classList.remove("hidden");
+                element.classList.add("hidden");
+            } else {
+                document.querySelector("#search").classList.add("hidden");
+                element.classList.remove("hidden");
+            }
+        });
+    });
+
+    window.addEventListener("resize", () => {
+        resize();
+    });
+
+    resize();
 
     logPreviousButton.addEventListener("click", async (event) => {
         if (uiState.currentDateIndex > logDates.length - 1) {

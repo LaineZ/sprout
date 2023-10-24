@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::Infallible, env, error::Error, path::Path, sync::Arc};
+use std::{collections::{HashMap, BTreeMap}, convert::Infallible, env, error::Error, path::Path, sync::Arc};
 
 pub mod config;
 pub mod error;
@@ -193,31 +193,26 @@ async fn search_logs(
     Ok(fmt_database_output(result, format))
 }
 
+fn html_error<E: ToString>(error: E) -> WithTemplate<serde_json::Value> {
+    WithTemplate {
+        name: "search.html",
+        value: json!({ "error": error.to_string() }),
+    }
+}
+
 pub async fn view_search_as_html(
     params: HashMap<String, String>,
     hb: Arc<Handlebars<'_>>,
     pool: Pool<Postgres>,
 ) -> Result<impl warp::Reply, Rejection> {
     let query = params.get("q");
-
     if query.is_none() {
-        let template = WithTemplate {
-            name: "search.html",
-            value: json!({ "error": "Search parameter is missing in URL" }),
-        };
-
-        return Ok(render(template, hb.clone()));
+        return Ok(render(html_error("Search parameter is missing in URL"), hb.clone()));
     }
 
-    let query = params.get("q").unwrap();
-
+    let query = query.unwrap();
     if query.is_empty() {
-        let template = WithTemplate {
-            name: "search.html",
-            value: json!({ "error": "Empty expression string" }),
-        };
-
-        return Ok(render(template, hb.clone()));
+        return Ok(render(html_error("Empty expression string"), hb.clone()));
     }
 
     let expression = Expr::parse(query);
@@ -225,7 +220,7 @@ pub async fn view_search_as_html(
     match expression {
         Ok(expr) => match search(pool, expr).await {
             Ok(messages) => {
-                let mut message_groups: HashMap<NaiveDate, Vec<Message>> = HashMap::new();
+                let mut message_groups: BTreeMap<NaiveDate, Vec<Message>> = BTreeMap::new();
 
                 for message in &messages {
                     let date = message.time.date();
@@ -236,7 +231,7 @@ pub async fn view_search_as_html(
                         .push(message.clone());
                 }
 
-                let message_results: Vec<models::MessageResults> = message_groups
+                let mut message_results: Vec<models::MessageResults> = message_groups
                     .iter()
                     .map(|(date, messages)| models::MessageResults {
                         date: date.clone(),
@@ -247,37 +242,22 @@ pub async fn view_search_as_html(
                     })
                     .collect();
 
+                message_results.reverse();
+
                 let template = if message_results.len() > 0 {
                     WithTemplate {
                         name: "search.html",
                         value: json!({ "messages": message_results }),
                     }
                 } else {
-                    WithTemplate {
-                        name: "search.html",
-                        value: json!({ "error": "No results" }),
-                    }
+                    html_error("No results")
                 };
 
                 Ok(render(template, hb.clone()))
             }
-            Err(err) => {
-                let template = WithTemplate {
-                    name: "search.html",
-                    value: json!({ "error": err.to_string() }),
-                };
-
-                Ok(render(template, hb.clone()))
-            }
+            Err(err) => Ok(render(html_error(err), hb.clone())),
         },
-        Err(err) => {
-            let template = WithTemplate {
-                name: "search.html",
-                value: json!({ "error": err.to_string() }),
-            };
-
-            Ok(render(template, hb.clone()))
-        }
+        Err(err) => Ok(render(html_error(err), hb.clone())),
     }
 }
 
@@ -335,7 +315,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             });
         })
     };
-
     let db_filter = warp::any().map(move || pool.clone());
     let dates_filter = warp::any().map(move || dates.clone());
     let static_files = env::current_dir()?.join(Path::new("static"));

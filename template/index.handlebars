@@ -14,16 +14,21 @@
         <button class="logo-btn" onclick="window.location.href = '/'">
             <img class="logo" src="images/icon.png" height="16">
         </button>
-        <button id="input-date-button" class="hidden log-date-control">
-            <img class="icon" src="images/calendar.png" width="16" height="16">
-            <input id="input-date" class="date-input-box" type="date" />
-        </button>
-        <button id="log-prev" class="hidden log-date-control">
-            <img class="icon" src="images/arrow-left.png" width="16" height="16">
-        </button>
-        <p id="current-date" class="hidden log-date-control">loading</p>
-        <button id="log-next" class="hidden log-date-control">
-            <img class="icon" src="images/arrow-right.png" width="16" height="16">
+        <span class="log-date-control hidden">
+            <button id="input-date-button">
+                <img class="icon" src="images/calendar.png" width="16" height="16">
+                <input id="input-date" class="date-input-box" type="date" />
+            </button>
+            <button id="log-prev">
+                <img class="icon" src="images/arrow-left.png" width="16" height="16">
+            </button>
+            <p id="current-date">loading</p>
+            <button id="log-next">
+                <img class="icon" src="images/arrow-right.png" width="16" height="16">
+            </button>
+        </span>
+        <button id="collapse" class="hidden collapsed">
+            <img class="icon" src="images/collapse.png" width="16" height="16">
         </button>
         <form method="get" action="/search" id="search">
             <input id="input-search" type="search" placeholder="Search..." name="q">
