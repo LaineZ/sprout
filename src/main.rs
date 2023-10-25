@@ -244,7 +244,7 @@ pub async fn view_search_as_html(
 
                 message_results.reverse();
 
-                let template = if message_results.len() > 0 {
+                let template = if !message_results.is_empty() {
                     WithTemplate {
                         name: "search.html",
                         value: json!({ "messages": message_results }),
@@ -279,9 +279,15 @@ pub async fn view_log_as_html(
     .fetch_all(&pool)
     .await.map_err(|_| warp::reject::custom(error::DatabaseError))?;
 
-    let template = WithTemplate {
-        name: "index.html",
-        value: json!({ "messages": result }),
+    println!("Results: {}", result.len());
+
+    let template =  if !result.is_empty() {
+        WithTemplate {
+            name: "index.html",
+            value: json!({ "messages": result }),
+        }
+    } else {
+        html_error(format!("No results for date: {}", date))
     };
 
     Ok(render(template, hb.clone()))

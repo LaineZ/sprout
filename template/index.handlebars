@@ -4,7 +4,7 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Sprout: Indexed #CC.RU Logs</title>
 </head>
@@ -12,23 +12,23 @@
 <body>
     <div class="head">
         <button class="logo-btn" onclick="window.location.href = '/'">
-            <img class="logo" src="images/icon.png" height="16">
+            <img class="logo" src="/images/icon.png" height="16">
         </button>
         <span class="log-date-control hidden">
             <button id="input-date-button">
-                <img class="icon" src="images/calendar.png" width="16" height="16">
+                <img class="icon" src="/images/calendar.png" width="16" height="16">
                 <input id="input-date" class="date-input-box" type="date" />
             </button>
             <button id="log-prev">
-                <img class="icon" src="images/arrow-left.png" width="16" height="16">
+                <img class="icon" src="/images/arrow-left.png" width="16" height="16">
             </button>
             <p id="current-date">loading</p>
             <button id="log-next">
-                <img class="icon" src="images/arrow-right.png" width="16" height="16">
+                <img class="icon" src="/images/arrow-right.png" width="16" height="16">
             </button>
         </span>
         <button id="collapse" class="hidden collapsed">
-            <img class="icon" src="images/collapse.png" width="16" height="16">
+            <img class="icon" src="/images/collapse.png" width="16" height="16">
         </button>
         <form method="get" action="/search" id="search">
             <input id="input-search" type="search" placeholder="Search..." name="q">
@@ -44,6 +44,12 @@
             </div>
         </aside> -->
         <div class="contents">
+            {{#if error}}
+            <div class="error">
+                <h2>{{ error }}</h2>
+            </div>
+            {{/if}}
+
             {{#each messages}}
             <div class="message">
                 <a id="{{ this.id }}" class="time" href="#{{ this.id }}">[{{ this.time }}]</a>
@@ -53,7 +59,7 @@
             {{/each}}
         </div>
     </main>
-    <script src="scripts/main.js"></script>
+    <script src="/scripts/main.js"></script>
 </body>
 
 </html>

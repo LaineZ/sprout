@@ -1,15 +1,20 @@
 const colorPalette = [
-    "#7b8d43",
-    "#ada63e",
-    "#a27943",
-    "#8a5d3c",
-    "#eabe5b",
-    "#edefe2",
-    "#ea92a8",
-    "#5587bc",
-    "#4ec0c9",
-    "#8d4986",
-    "#4e5a98"
+    'var(--red)',
+    'var(--green)',
+    'var(--yellow)',
+    'var(--blue)',
+    'var(--purple)',
+    'var(--aqua)',
+    'var(--gray)',
+    'var(--orange)',
+    'var(--red-dim)',
+    'var(--green-dim)',
+    'var(--yellow-dim)',
+    'var(--blue-dim)',
+    'var(--purple-dim)',
+    'var(--aqua-dim)',
+    'var(--gray-dim)',
+    'var(--orange-dim)'
 ];
 
 const clamp = (num, min, max = Number.MAX_SAFE_INTEGER) => Math.min(Math.max(num, min), max);
@@ -32,17 +37,18 @@ let uiState = {
 }
 
 function showErrorModal(message) {
-    document.querySelector("body").innerHTML += `<div class="error-modal"><h1>${message}</h1></div>`;
+    const errorModal = document.createElement("div");
+    errorModal.className = "error-modal";
+    errorModal.innerHTML = `<h1>${message}</h1>`;
+
+    document.body.appendChild(errorModal);
+
     setTimeout(function () {
-        document.querySelectorAll(".error-modal").forEach(element => {
-            element.classList.add("closing");
-        });
+        errorModal.classList.add("closing");
     }, clamp(message.length * 50, 1000));
 
     setTimeout(function () {
-        document.querySelectorAll(".error-modal").forEach(element => {
-            element.remove();
-        });
+        errorModal.remove();
     }, clamp(message.length * 60, 2000));
 
     var a = new Audio("sounds/error.wav");
@@ -50,7 +56,7 @@ function showErrorModal(message) {
 }
 
 function renderIRCFormatting(text) {
-    text = text.replace(/\x03(\d{1,2}(,\d{1,2})?)?/g, function(match, color) {
+    text = text.replace(/\x03(\d{1,2}(,\d{1,2})?)?/g, function (match, color) {
         if (color) {
             return `<span style="color: ${getHTMLColorFromIRC(color)};">`;
         } else {
@@ -72,8 +78,8 @@ function autolinkText(text) {
 
 function getHTMLColorFromIRC(ircColor) {
     const ircColors = [
-        'var(--fg)', '#000000', '#00007F', '#009300', '#ff0000', 'var(--error-bg)', '#9C009C', '#FC7F00', '#FFFF00',
-        '#00FC00', '#009393', '#00FFFF', '#0000FC', '#FF00FF', '#7F7F7F', '#D2D2D2'
+        'var(--fg)', 'var(--bg1)', 'var(--blue-dim)', 'var(--green-dim)', 'var(--red-dim)', 'var(--brown-dim)', 'var(--mageneta-dim)', 'var(--orange-dim)', 'var(--yellow-dim)',
+        'var(--green)', 'var(--aqua-dim)', 'var(--aqua)', 'var(--blue)', 'var(--purple)', 'var(--gray)', 'var(--gray-dim)'
     ];
 
     const colorCodes = ircColor.split(',').map(Number);
@@ -136,15 +142,16 @@ function searchView(path) {
 }
 
 function resize() {
+    const collapseButton = document.querySelector("#collapse");
+
+    document.querySelectorAll(".log-date-control").forEach((element) => {
+        element.classList.remove("hidden");
+    });
+
     if (window.innerWidth <= 800) {
-        document.querySelectorAll(".log-date-control").forEach((element) => {
-            element.classList.add("hidden");
-            document.querySelector("#search").classList.add("hidden");
-        });
+        document.querySelector("#search").classList.add("hidden");
+        collapseButton.classList.remove("collapsed");
     } else {
-        document.querySelectorAll(".log-date-control").forEach((element) => {
-            element.classList.remove("hidden");
-        });
         document.querySelector("#search").classList.remove("hidden");
     }
 }
@@ -155,10 +162,14 @@ async function defaultView(path) {
     const dateInput = document.querySelector("#input-date");
     const collapseButton = document.querySelector("#collapse");
 
+    logNextButton.setAttribute("disabled", true);
+    logPreviousButton.setAttribute("disabled", true);
+    dateInput.setAttribute("disabled", true);
+
     logNextButton.addEventListener("click", async (event) => {
         if (uiState.currentDateIndex <= 0) {
             uiState.currentDateIndex = 0;
-            showErrorModal("Already at the beggining");
+            showErrorModal("Already at the begining");
         } else {
             uiState.currentDateIndex -= 1;
             window.location.href = logDates[uiState.currentDateIndex];
@@ -185,7 +196,7 @@ async function defaultView(path) {
 
     resize();
 
-    logPreviousButton.addEventListener("click", async (event) => {
+    logPreviousButton.addEventListener("click", (event) => {
         if (uiState.currentDateIndex > logDates.length - 1) {
             uiState.currentDate = logDates.length - 1;
             showErrorModal("Already at the end");
@@ -194,16 +205,20 @@ async function defaultView(path) {
             window.location.href = logDates[uiState.currentDateIndex];
         }
     });
-    
-    dateInput.addEventListener("input", async (event) => {
+
+    dateInput.addEventListener("change", (event) => {
         window.location.href = event.target.value;
     });
-    
+
     await getLogsDates();
     uiState.currentDateIndex = clamp(logDates.indexOf(path), 0, logDates.length - 1);
 
     dateInput.setAttribute("min", logDates[logDates.length - 1]);
     dateInput.setAttribute("max", logDates[0]);
+
+    logNextButton.removeAttribute("disabled");
+    logPreviousButton.removeAttribute("disabled");
+    dateInput.removeAttribute("disabled");
 }
 
 addEventListener("DOMContentLoaded", async () => {
@@ -211,7 +226,7 @@ addEventListener("DOMContentLoaded", async () => {
     const path = window.location.pathname.substring(1);
 
     if (path != "search") {
-        if (window.location.hash.length > 0) {
+        if (window.location.hash.length <= 0) {
             const objDiv = document.querySelector(".contents");
             objDiv.scrollTop = objDiv.scrollHeight;
         }

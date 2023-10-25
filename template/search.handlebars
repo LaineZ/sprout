@@ -4,7 +4,7 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Sprout: Indexed #CC.RU Logs</title>
 </head>
@@ -12,7 +12,7 @@
 <body>
     <div class="head">
         <button class="logo-btn" onclick="window.location.href = '/'">
-            <img class="logo" src="images/icon.png" height="16">
+            <img class="logo" src="/images/icon.png" height="16">
         </button>
         <form method="get" action="/search" id="search">
             <input id="input-search" type="search" placeholder="Search..." name="q">
@@ -34,10 +34,10 @@
         {{/if}}
         <div class="contents">
             {{#each messages}}
-            <h2>{{ this.date }}</h2>
+            <h2><a href="/{{ this.date }}">{{ this.date }}</a></h2>
                 {{#each this.messages}}
                     <div class="message">
-                        <a id="{{ this.id }}" class="time" href="{{ this.id }}">[{{ this.time }}]</a>
+                        <a class="time" href="{{ ../this.date }}/#{{ this.id }}">[{{ this.time }}]</a>
                         <span class="from">&lt;{{ this.author }}&gt;</span>
                         <span class="text">{{ this.body }}</span>
                     </div>
@@ -45,7 +45,7 @@
             {{/each}}
         </div>
     </main>
-    <script src="scripts/main.js"></script>
+    <script src="/scripts/main.js"></script>
 </body>
 
 </html>
