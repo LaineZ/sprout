@@ -1,0 +1,43 @@
+name: CI Build
+
+env:
+  RELEASE_BIN: logger-viewer
+on:
+  push:
+
+jobs:
+  linux_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: rustup update
+      - run: cargo build --release
+      - run: strip ./target/release/${{ env.RELEASE_BIN }}
+      - run: mkdir ./artifacts
+      - run: mv ./target/release/${{ env.RELEASE_BIN }} ./artifacts
+      - uses: actions/upload-artifact@v3
+        with:
+          name: bc_rs-linux
+          path: ./artifacts
+
+  windows_build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: rustup update
+      # x86_64
+      - run: cargo build --release
+      - run: mkdir ./artifacts
+      - run: move ./target/release/${{ env.RELEASE_BIN }}.exe ./artifacts
+      # i686
+      - run: cargo build --release --target i686-pc-windows-msvc
+      - run: mkdir ./artifacts-i686
+      - run: move ./target/i686-pc-windows-msvc/release/${{ env.RELEASE_BIN }}.exe ./artifacts-i686
+      - uses: actions/upload-artifact@v3
+        with:
+          name: bc_rs-windows-x64
+          path: ./artifacts
+      - uses: actions/upload-artifact@v3
+        with:
+          name: bc_rs-windows-x32
+          path: ./artifacts-i686
