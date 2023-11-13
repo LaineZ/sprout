@@ -338,10 +338,17 @@ pub async fn search(
     query.append(&filter);
     query.sql(" ORDER BY ");
 
-    if sort.as_str() == "relevance" {
-        relevance(&mut query, &tsqueries);
-    } else {
-        query.sql("msg_timestamp");
+    match sort.as_str() {
+        "time" => {
+            query.sql("msg_timestamp");
+        },
+        "relevance" => {
+            relevance(&mut query, &tsqueries);
+        }
+        "random" => {
+            query.sql("RANDOM()");
+        }
+        _ => bail!("bad 'sort' function argument: either 'time', 'relevance' or 'random' expected")
     }
 
     match order.as_str() {
