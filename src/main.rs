@@ -279,8 +279,6 @@ pub async fn view_log_as_html(
     .fetch_all(&pool)
     .await.map_err(|_| warp::reject::custom(error::DatabaseError))?;
 
-    println!("Results: {}", result.len());
-
     let template =  if !result.is_empty() {
         WithTemplate {
             name: "index.html",

@@ -1,6 +1,6 @@
 @font-face {
-  font-family: "unscii-thin";
-  src: url("/fonts/unscii-8-thin.otf");
+  font-family: "Proggy Clean";
+  src: url("/fonts/ProggyClean.ttf");
 }
 
 :root {
@@ -158,7 +158,7 @@ main {
 }
 
 .logo-btn {
-  padding: 0px;
+  padding: 2px;
 }
 
 .contents {
@@ -261,6 +261,7 @@ main {
 }
 
 #current-date {
+  font-family: "Proggy Clean", monospace;
   margin-right: 10px;
 }
 

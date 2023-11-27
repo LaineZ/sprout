@@ -230,7 +230,7 @@ addEventListener("DOMContentLoaded", async () => {
             const objDiv = document.querySelector(".contents");
             objDiv.scrollTop = objDiv.scrollHeight;
         }
-        await defaultView(path);
+        await defaultView(path.replace("/", ""));
     } else {
         searchView();
     }
