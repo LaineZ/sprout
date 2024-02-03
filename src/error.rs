@@ -1,4 +1,4 @@
-use std::{convert::Infallible, error::Error};
+use std::convert::Infallible;
 use serde::Serialize;
 use warp::{http::StatusCode, Rejection, Reply, reject};
 
@@ -12,6 +12,12 @@ pub struct ErrorResponse {
     pub message: String,
     pub status_code: StatusCode,
 }
+
+
+#[derive(Debug)]
+pub struct AnyhowError(pub anyhow::Error);
+
+impl reject::Reject for AnyhowError {}
 
 #[derive(Debug)]
 pub struct DatabaseError;

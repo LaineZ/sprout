@@ -1,9 +1,6 @@
 mod expr;
 mod functions;
 mod parser;
-
-use std::sync::Arc;
-
 use crate::models;
 
 pub use self::expr::Expr;

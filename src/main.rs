@@ -1,15 +1,28 @@
-use std::{collections::{HashMap, BTreeMap}, convert::Infallible, env, error::Error, path::Path, sync::Arc};
+#![allow(dead_code)]
 
-pub mod config;
-pub mod error;
-pub mod models;
+use std::{
+    collections::{BTreeMap, HashMap},
+    convert::Infallible,
+    env,
+    error::Error,
+    path::Path,
+    str::FromStr,
+    sync::Arc,
+    time::Instant,
+};
+
+mod config;
+mod error;
+mod import;
+mod models;
 mod query;
 
 use chrono::{NaiveDate, Utc};
 use config::Config;
-use error::ErrorResponse;
+use error::{AnyhowError, ErrorResponse};
 use handlebars::Handlebars;
 use query::{search, Expr};
+use reqwest::Client as WebClient;
 use serde::Serialize;
 use serde_json::json;
 use sqlx::{postgres::PgListener, Pool, Postgres};
@@ -207,7 +220,10 @@ pub async fn view_search_as_html(
 ) -> Result<impl warp::Reply, Rejection> {
     let query = params.get("q");
     if query.is_none() {
-        return Ok(render(html_error("Search parameter is missing in URL"), hb.clone()));
+        return Ok(render(
+            html_error("Search parameter is missing in URL"),
+            hb.clone(),
+        ));
     }
 
     let query = query.unwrap();
@@ -265,7 +281,7 @@ pub async fn view_log_as_html(
     path: String,
     hb: Arc<Handlebars<'_>>,
     pool: Pool<Postgres>,
-) -> std::result::Result<impl warp::Reply, warp::Rejection> {
+) -> Result<impl warp::Reply, warp::Rejection> {
     let date = NaiveDate::parse_from_str(&path, "%Y-%m-%d").unwrap_or({
         let current_datetime = Utc::now();
         current_datetime.naive_utc().into()
@@ -279,7 +295,7 @@ pub async fn view_log_as_html(
     .fetch_all(&pool)
     .await.map_err(|_| warp::reject::custom(error::DatabaseError))?;
 
-    let template =  if !result.is_empty() {
+    let template = if !result.is_empty() {
         WithTemplate {
             name: "index.html",
             value: json!({ "messages": result }),
@@ -289,6 +305,60 @@ pub async fn view_log_as_html(
     };
 
     Ok(render(template, hb.clone()))
+}
+
+pub async fn import(date: String, db: Pool<Postgres>) -> Result<impl warp::Reply, warp::Rejection> {
+    let _guard = match import::LOCK.try_lock() {
+        Ok(v) => v,
+        Err(_) => {
+            return Err(warp::reject::custom(ErrorResponse {
+                message: "Import already running".to_string(),
+                status_code: warp::http::StatusCode::BAD_REQUEST,
+            }))
+        }
+    };
+
+    let today = Utc::now().naive_utc();
+    let mut cut_offset = -1;
+
+    let start = if !date.is_empty() {
+        NaiveDate::from_str(&date).map_err(|op| AnyhowError(op.into()))?
+    } else {
+        let (o, d) = import::get_latest_msg(db.clone())
+            .await
+            .map_err(|op| AnyhowError(op.into()))?
+            .ok_or(anyhow::anyhow!("cannot get start date"))
+            .map_err(|op| AnyhowError(op.into()))?;
+        cut_offset = o;
+        d
+    };
+
+    let web = WebClient::new();
+    let instant = Instant::now();
+    let mut date = start;
+    let mut count = 0;
+
+    while date <= today.into() {
+        count += import::download_and_insert_logs(db.clone(), &web, date, cut_offset)
+            .await
+            .map_err(|op| AnyhowError(op.into()))?;
+        cut_offset = -1;
+        date = date.succ_opt().unwrap();
+    }
+
+    let json = json!({
+        "count": count,
+        "elapsed_time": instant.elapsed().as_millis()
+    });
+
+    Ok(reply::with_status(
+        reply::with_header(
+            json.to_string(),
+            "Content-Type",
+            "application/json; charset=utf-8",
+        ),
+        warp::http::StatusCode::OK,
+    ))
 }
 
 #[tokio::main]
@@ -313,6 +383,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let _guard = {
         timer.schedule_repeating(chrono::Duration::minutes(5), move || {
             // invalidate cache
+
             futures::executor::block_on(async {
                 let mut data = dates_timer.lock().await;
                 data.clear();
@@ -340,10 +411,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .and(db_filter.clone())
             .and_then(get_today_logs);
 
-        let logs_total_dates = warp::path!("dates")
+        let log_total_dates = warp::path!("dates")
             .and(db_filter.clone())
             .and(dates_filter)
             .and_then(get_log_dates);
+
+        let log_import_by_date = warp::path!("import" / String)
+            .and(db_filter.clone())
+            .and_then(import);
+
+        let log_import = warp::path!("import")
+            .and(db_filter.clone())
+            .and_then(move |db: Pool<Postgres>| {
+                import(String::new(), db)
+            });
 
         let log_interface = warp::path!(String)
             .and_then(|segment: String| async move {
@@ -371,13 +452,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         warp::serve(
             warp::fs::dir(static_files)
+                .or(log_import)
+                .or(log_import_by_date)
+                .or(log_interface_index)
                 .or(log_route)
                 .or(log_today_route)
                 .or(log_search_route)
-                .or(logs_total_dates)
+                .or(log_total_dates)
                 .or(log_interface)
                 .or(log_interface_search)
-                .or(log_interface_index)
                 .recover(error::handle_rejection_json),
         )
         .run((config.bind_address, config.port))
