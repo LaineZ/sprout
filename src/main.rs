@@ -1,15 +1,6 @@
 #![allow(dead_code)]
 
-use std::{
-    collections::{BTreeMap, HashMap},
-    convert::Infallible,
-    env,
-    error::Error,
-    path::Path,
-    str::FromStr,
-    sync::Arc,
-    time::Instant,
-};
+use std::{ collections::{BTreeMap, HashMap}, convert::Infallible, env, error::Error, path::Path, str::FromStr, sync::Arc, time::Instant };
 
 mod config;
 mod error;
@@ -307,7 +298,7 @@ pub async fn view_log_as_html(
     Ok(render(template, hb.clone()))
 }
 
-pub async fn import(date: String, db: Pool<Postgres>) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn import(params: HashMap<String, String>, db: Pool<Postgres>) -> Result<impl warp::Reply, warp::Rejection> {
     let _guard = match import::LOCK.try_lock() {
         Ok(v) => v,
         Err(_) => {
@@ -320,6 +311,10 @@ pub async fn import(date: String, db: Pool<Postgres>) -> Result<impl warp::Reply
 
     let today = Utc::now().naive_utc();
     let mut cut_offset = -1;
+
+
+    let long_lived_value = String::new();
+    let date = params.get("date").unwrap_or(&long_lived_value);
 
     let start = if !date.is_empty() {
         NaiveDate::from_str(&date).map_err(|op| AnyhowError(op.into()))?
@@ -416,15 +411,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .and(dates_filter)
             .and_then(get_log_dates);
 
-        let log_import_by_date = warp::path!("import" / String)
+        let log_import = warp::path!("logs" / "import")
             .and(db_filter.clone())
-            .and_then(import);
-
-        let log_import = warp::path!("import")
-            .and(db_filter.clone())
-            .and_then(move |db: Pool<Postgres>| {
-                import(String::new(), db)
-            });
+            .and(warp::query::<HashMap<String, String>>())
+            .and_then(move |db: Pool<Postgres>, query: HashMap<String, String>| import(query, db));
 
         let log_interface = warp::path!(String)
             .and_then(|segment: String| async move {
@@ -453,7 +443,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         warp::serve(
             warp::fs::dir(static_files)
                 .or(log_import)
-                .or(log_import_by_date)
                 .or(log_interface_index)
                 .or(log_route)
                 .or(log_today_route)
